@@ -1,0 +1,32 @@
+import { use } from "react";
+
+export const usersReducers = (state = [], action) => {
+
+    switch (action.type) {
+        case 'ADD_USER':
+
+            return [
+                ...state,
+                {
+                    ...action.payload,
+                    //id: new Date().getTime(),
+                }
+            ];
+        case 'REMOVE_USER':
+            return state.filter(user => user.id !== action.payload);
+        case 'UPDATE_USER':
+            return state.map(u => {
+                if (u.id === action.payload.id) {
+                    return {
+                        ...action.payload,
+                        password: u.password,
+                    };
+                }
+                return u;
+            });
+        case 'LOAD_USERS':
+            return action.payload;    
+        default:
+            return state;
+    }
+}
