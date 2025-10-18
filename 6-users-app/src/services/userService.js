@@ -20,9 +20,8 @@ export const save = async({username, email, password}) => {
             password,
         });
     } catch (error) {
-        console.error(error);
+        throw error;
     }
-    return undefined;
 }
 
 export const update = async({id, username, email}) => {
@@ -30,11 +29,11 @@ export const update = async({id, username, email}) => {
         return await axios.put( `${BASE_URL}/${id}`, {
             username,
             email,
+            //password: 'nothing',
         });
     } catch (error) {
-        console.error(error);
+        throw error;
     }
-    return undefined;
 }
 
 export const remove = async(id) => {
