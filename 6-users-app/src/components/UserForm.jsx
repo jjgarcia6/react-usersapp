@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import Swal from "sweetalert2";
+//import Swal from "sweetalert2";
 import { UserContext } from "../context/UserContext";
 
 export const UserForm = ({ userSelected, handlerCloseForm }) => {
@@ -8,7 +8,7 @@ export const UserForm = ({ userSelected, handlerCloseForm }) => {
 
     const [userForm, setUserForm] = useState(initialUserForm);
 
-    const { id, username, password, email } = userForm;
+    const { id, username, password, email, admin } = userForm;
 
     useEffect(() => {
         setUserForm({
@@ -18,13 +18,22 @@ export const UserForm = ({ userSelected, handlerCloseForm }) => {
     }, [userSelected]);
 
     const onInputChange = ({ target }) => {
-        //console.log(target)
+
         const { name, value } = target;
         setUserForm({
             ...userForm,
             [name]: value
         });
     }
+
+    const onCheckboxChange = ({ target }) => {
+        const { checked } = target;
+        setUserForm({
+            ...userForm,
+            admin: checked,
+        });
+    }
+
     const onSubmit = (event) => {
         event.preventDefault();
         // if (!username || (!password && id === 0) || !email) {
@@ -83,6 +92,16 @@ export const UserForm = ({ userSelected, handlerCloseForm }) => {
                 value={email}
                 onChange={onInputChange} />
             <p className= "text-danger">{errors?.email}</p>
+
+            <div className="my-3 form-check">
+                <input type="checkbox"
+                    name="admin"
+                    checked={admin}
+                    className="form-check-input"
+                    onChange={onCheckboxChange}
+                    />
+                    <label className="form-check-label">Admin</label>
+            </div>
             
             <input
                 type="hidden"

@@ -1,8 +1,9 @@
-import { useReducer, useState } from "react";
+import { useContext, useReducer, useState } from "react";
 import { usersReducers } from "../reducers/usersReducers";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { findUsers, save, remove, update } from "../services/userService";
+import { AuthContext } from "../auth/context/AuthContext";
 
 const initialUsers = [];
 
@@ -11,13 +12,10 @@ const initialUserForm = {
     username: "",
     password: "",
     email: "",
+    admin: false,
 }
 
-const initialErrors = {
-    username: "",
-    password: "",
-    email: "",
-}
+// errores del formulario (inicializado dinámicamente)
 
 export const useUsers = () => {
 
@@ -27,18 +25,28 @@ export const useUsers = () => {
     
     const [errors, setErrors] = useState({});
     const navigate = useNavigate();
+    const { login, handlerLogout } = useContext(AuthContext);
 
     const getUsers = async () => {
-        const result = await findUsers();
-        console.log(result);
-        dispatch({
-            type: 'LOAD_USERS',
-            payload: result.data,
-        });
+
+        try {
+            const result = await findUsers();
+            console.log(result);
+            dispatch({
+                type: 'LOAD_USERS',
+                payload: result.data,
+            });
+        } catch (error) {
+            if (error.response?.status == 401) { 
+                    handlerLogout();
+            }  
+        }        
     }
 
     const handlerAddUser = async(user) => {
         //console.log(user);
+
+        if (!login?.isAdmin) return;
 
         let response;
         try {    
@@ -77,6 +85,8 @@ export const useUsers = () => {
                 if (error.response.data?.message?.includes('UK_email')) {
                     setErrors({ email: 'Email already exists!' });
                 }
+                } else if (error.response?.status === 401) { 
+                  handlerLogout();
             } else {
                 throw error;
             }
@@ -86,6 +96,8 @@ export const useUsers = () => {
     const handlerRemoveUser = (id) => {
         //console.log(id);
 
+        if (!login?.isAdmin) return;
+
         Swal.fire({
             title: "Are you sure?",
             text: "Caution, the user will be deleted permanently!",
@@ -94,18 +106,25 @@ export const useUsers = () => {
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
             confirmButtonText: "Yes, delete it!"
-        }).then((result) => {
+        }).then( async (result) => {
             if (result.isConfirmed) {
-                remove(id);
-                dispatch({
-                    type: 'REMOVE_USER',
-                    payload: id,
-                });
+
+                try {
+                    await remove(id);
+                    dispatch({
+                        type: 'REMOVE_USER',
+                        payload: id,
+                    });
                 Swal.fire({
                     title: "User Deleted!",
                     text: "The user has been deleted successfully!",
                     icon: "success"
                 });
+                } catch (error) {
+                    if (error.response?.status == 401) { 
+                        handlerLogout();
+                    }                
+                }  
             }
         });
     }

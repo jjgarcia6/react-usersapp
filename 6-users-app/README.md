@@ -35,7 +35,7 @@ Quick start
    npm run dev
    ```
 
-3. Abrir la app en el navegador (por defecto http://localhost:5173)
+3. Abrir la app en el navegador (por defecto <http://localhost:5173>)
 
 Construir y previsualizar
 

@@ -2,14 +2,17 @@
 export const loginReducer = (state = {}, action) => {
 
     switch (action.type) {
-        case 'LOGIN':
+        case 'login':
             return {
                 isAuth: true,
-                user: action.payload,
+                isAdmin: action.payload.isAdmin,
+                user: action.payload.user,
             };
-        case 'LOGOUT':
+        case 'logout':
             return {
                 isAuth: false,
+                isAdmin: false,
+                user: undefined,
             };
         default:
             return state;
