@@ -1,41 +1,25 @@
-import { useContext, useReducer, useState } from "react";
-import { usersReducers } from "../reducers/usersReducers";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { findUsers, save, remove, update } from "../services/userService";
-import { AuthContext } from "../auth/context/AuthContext";
+import { useDispatch, useSelector } from "react-redux";
+import { initialUserForm, ADD_USER, LOAD_USERS, UPDATE_USER, REMOVE_USER, onUserSelectedForm, onOpenForm, onCloseForm, loadingError } from "../store/slices/users/usersSlice";
+import { useAuth } from "../auth/hooks/useAuth";
 
-const initialUsers = [];
-
-const initialUserForm = {
-    id: 0,
-    username: "",
-    password: "",
-    email: "",
-    admin: false,
-}
-
-// errores del formulario (inicializado dinámicamente)
 
 export const useUsers = () => {
 
-    const [users, dispatch] = useReducer(usersReducers, initialUsers);
-    const [userSelected, setUserSelected] = useState(initialUserForm);
-    const [visibleForm, setVisibleForm] = useState(false);
+    const {users, userSelected, visibleForm, errors} = useSelector(state => state.users);
+    const dispatch = useDispatch();
     
-    const [errors, setErrors] = useState({});
     const navigate = useNavigate();
-    const { login, handlerLogout } = useContext(AuthContext);
+    const { login, handlerLogout } = useAuth();
 
     const getUsers = async () => {
 
         try {
             const result = await findUsers();
             console.log(result);
-            dispatch({
-                type: 'LOAD_USERS',
-                payload: result.data,
-            });
+            dispatch(LOAD_USERS(result.data));            
         } catch (error) {
             if (error.response?.status == 401) { 
                     handlerLogout();
@@ -44,7 +28,6 @@ export const useUsers = () => {
     }
 
     const handlerAddUser = async(user) => {
-        //console.log(user);
 
         if (!login?.isAdmin) return;
 
@@ -53,14 +36,11 @@ export const useUsers = () => {
         
             if (user.id === 0) {
                 response = await save(user);
+                dispatch(ADD_USER(response.data))
             } else {
                 response = await update(user);
+                dispatch(UPDATE_USER(response.data));
             }
-
-            dispatch({
-                type: (user.id === 0) ? 'ADD_USER' : 'UPDATE_USER',
-                payload: response.data,
-            });
 
             Swal.fire({
                 title: (user.id === 0) ?
@@ -75,15 +55,15 @@ export const useUsers = () => {
             navigate('/users');
         } catch (error) {
             if (error.response && error.response.status == 400){
-                setErrors(error.response.data);
+                dispatch(loadingError(error.response.data));
             } else if (error.response && error.response.status == 500 &&
                 error.response.data?.message?.includes('constraint')) {
                 
                 if (error.response.data?.message?.includes('UK_username')) {
-                    setErrors({ username: 'Username already exists!' });
+                    dispatch(loadingError({ username: 'Username already exists!' }));
                 }
                 if (error.response.data?.message?.includes('UK_email')) {
-                    setErrors({ email: 'Email already exists!' });
+                    dispatch(loadingError({ email: 'Email already exists!' }));
                 }
                 } else if (error.response?.status === 401) { 
                   handlerLogout();
@@ -94,7 +74,6 @@ export const useUsers = () => {
     }
 
     const handlerRemoveUser = (id) => {
-        //console.log(id);
 
         if (!login?.isAdmin) return;
 
@@ -111,10 +90,7 @@ export const useUsers = () => {
 
                 try {
                     await remove(id);
-                    dispatch({
-                        type: 'REMOVE_USER',
-                        payload: id,
-                    });
+                    dispatch(REMOVE_USER(id));
                 Swal.fire({
                     title: "User Deleted!",
                     text: "The user has been deleted successfully!",
@@ -130,19 +106,16 @@ export const useUsers = () => {
     }
 
     const handlerUserSelectedForm = (user) => {
-        //console.log(user);
-        setVisibleForm(true);
-        setUserSelected({ ...user });
+        dispatch(onUserSelectedForm({ ...user }));
     }
 
     const handlerOpenForm = () => {
-        setVisibleForm(true);
+        dispatch(onOpenForm());
     }
 
     const handlerCloseForm = () => {
-        setVisibleForm(false);
-        setUserSelected(initialUserForm);
-        setErrors({});
+        dispatch(onCloseForm());
+        dispatch(loadingError({}));
     }
 
 

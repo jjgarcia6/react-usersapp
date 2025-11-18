@@ -1,10 +1,9 @@
-import { useContext, useEffect, useState } from "react";
-//import Swal from "sweetalert2";
-import { UserContext } from "../context/UserContext";
+import { useEffect, useState } from "react";
+import { useUsers } from "../hooks/useUsers";
 
 export const UserForm = ({ userSelected, handlerCloseForm }) => {
 
-    const { initialUserForm, handlerAddUser, errors } = useContext(UserContext);
+    const { initialUserForm, handlerAddUser, errors } = useUsers();
 
     const [userForm, setUserForm] = useState(initialUserForm);
 
@@ -36,29 +35,7 @@ export const UserForm = ({ userSelected, handlerCloseForm }) => {
 
     const onSubmit = (event) => {
         event.preventDefault();
-        // if (!username || (!password && id === 0) || !email) {
-        //     Swal.fire({
-        //         title: "Validation error!",
-        //         text: "You must complete the form fields",
-        //         icon: "error"
-        //     });
-
-        //     return;
-        // }
-        // if (!email.includes('@')) {
-        //     Swal.fire({
-        //         title: "Validation email error!",
-        //         text: "Invalid email, must contain @",
-        //         icon: "error"
-        //     });
-
-        //     return;
-        // }
-        //console.log(userForm);
-
-        //guardar los user form en el listado de usuarios
         handlerAddUser(userForm);
-        //setUserForm(initialUserForm);
     }
 
     const onCloseForm = () => {
